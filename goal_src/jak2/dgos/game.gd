@@ -463,6 +463,8 @@
   "cty-guard-turret-button.o"
   "entity-debug.o" ;; added
   "mod-settings.o" ;; added
+
   "mod-common-functions.o" ;; added
+    "localmulti.o";; added
   "mod-custom-code.o" ;; added
  ))
