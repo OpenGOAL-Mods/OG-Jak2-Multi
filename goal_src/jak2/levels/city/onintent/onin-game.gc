@@ -2512,16 +2512,16 @@
        (set! (-> self wave-time) 0)
        0
        )
-      ((cpad-pressed? 0 triangle)
+      ((or (cpad-pressed? 0 triangle) (cpad-pressed? 1 triangle))
        (onin-game-method-27 self 0)
        )
-      ((cpad-pressed? 0 circle)
+      ((or (cpad-pressed? 0 circle) (cpad-pressed? 1 circle))
        (onin-game-method-27 self 1)
        )
-      ((cpad-pressed? 0 x)
+      ((or (cpad-pressed? 0 x) (cpad-pressed? 1 x))
        (onin-game-method-27 self 2)
        )
-      ((cpad-pressed? 0 square)
+      ((or (cpad-pressed? 0 square) (cpad-pressed? 1 square))
        (onin-game-method-27 self 3)
        )
       )
@@ -2531,6 +2531,15 @@
       )
     (logclear!
       (-> *cpad-list* cpads 0 button0-rel 0)
+      (pad-buttons up right down left l1 r1 triangle circle x square)
+      )
+
+    (logclear!
+      (-> *cpad-list* cpads 1 button0-abs 0)
+      (pad-buttons up right down left l1 r1 triangle circle x square)
+      )
+    (logclear!
+      (-> *cpad-list* cpads 1 button0-rel 0)
       (pad-buttons up right down left l1 r1 triangle circle x square)
       )
     )
