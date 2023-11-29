@@ -913,7 +913,7 @@
   )
 
 (define *multi-camera* (new 'global 'multi-camera))
-
+(define-extern *target2* target)
 (defun real-main-draw-hook ()
   "The main drawing function. This dispatches all renderers and is called directly from the display-loop
   in main.gc"
@@ -960,10 +960,10 @@
   ;; point it at jak directly:
   (let ((cam-pos (vector-copy! (new-stack-vector0) (-> *math-camera* inv-camera-rot vector 3))))
     ;; shift up by 10 meters
-    (+! (-> cam-pos y) (meters 5))
+    ;;(+! (-> cam-pos y) (meters 5))
     ;; dir from camera to jak
     (let* ((jak-dir (vector-! (new-stack-vector0)
-                              (if *target* (-> *target* root trans)
+                              (if (get-target 1) (-> (get-target 1) root trans)
                                   (new-stack-vector0))
                               cam-pos
                               ))
