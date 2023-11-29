@@ -1913,8 +1913,9 @@
   (buzz-stop! 0)
   self
   )
-
+(defun-extern runs-on-tgt-int none)
 (defbehavior init-target target ((arg0 continue-point))
+(runs-on-tgt-int)
   (set-setting! 'allow-pause #f 0.0 0)
   (set-setting! 'allow-progress #f 0.0 0)
   (apply-settings *setting-control*)

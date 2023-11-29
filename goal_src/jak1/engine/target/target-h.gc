@@ -157,6 +157,15 @@
 
 
 (define-perm *target* target #f)
+;; For multiplayer
+(define *target-list* (new 'global 'boxed-array handle 4))
+
+(defun get-target ((tgt-idx int))
+  (if (zero? (-> *target-list* tgt-idx))
+    (the-as target #f)
+    (the-as target (handle->process (-> *target-list* tgt-idx)))
+    )
+  )
 
 (deftype sidekick (process-drawable)
   ((parent-override   (pointer target)  :overlay-at parent)

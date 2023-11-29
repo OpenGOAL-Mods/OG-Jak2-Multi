@@ -1,0 +1,299 @@
+;;-*-Lisp-*-
+(in-package goal)
+
+;; name: localmulti.gc
+;; name in dgo: main
+;; dgos: GAME, ENGINE
+
+;;Spawn a new target process
+(defun start-extra-target ((idx int))
+  (process-spawn
+                target
+                :init init-target
+                  (-> *game-info* current-continue) 
+                :from *target-dead-pool*
+                :to *target-pool*
+                :stack *kernel-dram-stack*
+                )
+
+)
+
+;;goes in (defbehavior init-target target ((arg0 continue-point)) to setup controllers only once
+(defun runs-on-tgt-int ()
+  (pc-set-controller! 1 0)
+     (pc-set-controller! 0 1)
+(none)
+
+)
+
+;;These return true if the specified target is currently "alive".
+(defun target-alive? ((tgt target))
+  (and tgt 
+    (not (or (= (-> tgt state) #f) (= (-> tgt state) symbol)))
+    )
+  )
+
+(defun extra-target-alive? () 
+  (dotimes (tgt-idx (-> *target-list* length))
+    (if (and (> tgt-idx 0) (target-alive? (get-target tgt-idx)))
+      (return #t)
+      )
+    )
+  #f
+  )
+  
+;;Command to warp a target to another (normally to warp someone to main target to bring back on camera)
+(defun warp-jakA-to-jakB ((jakA target) (jakB target))
+      (set! (-> (-> jakA root) trans x) (-> (-> jakB root) trans x))
+      (set! (-> (-> jakA root) trans y) (-> (-> jakB root) trans y))
+      (set! (-> (-> jakA root) trans z) (-> (-> jakB root) trans z))
+)
+
+(defun check-multi-jak-dist ((jak target))
+  (case (-> jak state)
+    ((target-launch target-duck-high-jump target-duck-high-jump-jump)
+      ;; don't warp targets that are currently in a launch / high jump
+      #f
+      )
+    (else
+      (let ((xyz-dist 0.0)
+            (xz-dist 0.0)
+            (y-dist 0.0)
+            (j-vec (new 'static 'vector)))
+        (set! (-> j-vec x) (-> (-> jak root) trans x))
+        (set! (-> j-vec y) (-> (-> jak root) trans y))
+        (set! (-> j-vec z) (-> (-> jak root) trans z))
+
+        (set! xyz-dist (vector-vector-distance j-vec (target-pos 0)) )
+        (set!  xz-dist (vector-vector-xz-distance j-vec (target-pos 0)) )
+        (set!   y-dist (- (-> (target-pos 0) y) (-> j-vec y)) )
+
+        (> xyz-dist (meters 75.0))
+        )
+      )
+    )
+)
+;; (deftype crate (process-drawable)
+;;   ((root-override       collide-shape-moving         :offset        112)
+;;    (smush               smush-control        :inline :offset-assert 176)
+;;    (base                vector               :inline :offset-assert 208)
+;;    (look                symbol                       :offset-assert 224)
+;;    (defense             symbol                       :offset-assert 228)
+;;    (incomming-attack-id uint64                       :offset-assert 232)
+;;    (target              handle                       :offset-assert 240)
+;;    (child-count         int32                        :offset-assert 248)
+;;    (victory-anim        spool-anim                   :offset-assert 252)
+;;    )
+;;   :heap-base #x90
+;;   :method-count-assert 30
+;;   :size-assert         #x100
+;;   :flag-assert         #x1e00900100
+;;   (:methods
+;;     (wait () _type_ :state 20)
+;;     (die (symbol int) _type_ :state 21)
+;;     (special-contents-die () _type_ :state 22)
+;;     (bounce-on () _type_ :state 23)
+;;     (notice-blue (handle) _type_ :state 24)
+;;     (params-init (_type_ entity) none 25)
+;;     (art-init (_type_) crate 26)
+;;     (params-set! (_type_ symbol symbol) none 27)
+;;     (dummy-28 (_type_) none 28)
+;;     (smush-update! (_type_) none 29)
+;;     )
+;;   )
+
+(defun crate-to-wood ((arg0 string))
+  (when (process-by-ename arg0)
+    (set!   (-> (the-as crate (the process-drawable (process-by-ename arg0)))defense)'wood)
+)(none)
+)
+(defun regular-camera-bool()
+        (case (-> *target* current-level name) 
+          (('jungleb)
+          #f
+           )
+           
+          (else
+          #t
+            )
+          )
+
+)
+
+
+(define racer? #f) 
+(define flutflut? #f)
+
+(defun localmulti-run-eachframe()
+
+;;Update global variables
+(set! racer? (aif *target* (case (-> it next-state name) (
+                                      ('target-racing
+                                       'target-racing-bounce
+                                       'target-racing-death
+                                       'target-racing-falling
+                                       'target-racing-grab
+                                       'target-racing-hit
+                                       'target-racing-jump
+                                       'target-racing-smack
+                                       'target-racing-start) #t))))
+(set! flutflut? (aif *target* (case (-> it next-state name) (
+                                      ('target-flut-air-attack
+                                       'target-flut-air-attack-hit-ground
+                                       'target-flut-double-jump
+                                       'target-flut-falling
+                                       'target-flut-grab
+                                       'target-flut-hit
+                                       'target-flut-hit-ground
+                                       'target-flut-jump
+                                       'target-flut-running-attack
+                                       'target-flut-stance
+                                       'target-flut-start
+                                       'target-flut-walk) #t))))
+
+(crate-to-wood "crate-2590")
+(crate-to-wood "crate-3044")
+(crate-to-wood "crate-3049")
+(crate-to-wood "crate-3055")
+(crate-to-wood "crate-3064")
+(crate-to-wood "crate-3074")
+(crate-to-wood "crate-2715")
+(crate-to-wood "crate-2718")
+(crate-to-wood "crate-3091")
+(crate-to-wood "crate-3093")
+(crate-to-wood "crate-3095")
+(crate-to-wood "crate-3097")
+(crate-to-wood "crate-3101")
+(crate-to-wood "crate-3109")
+(crate-to-wood "crate-3115")
+
+  ;;Change LPC crates from steel to wood
+
+(crate-to-wood "crate-3036")
+
+;;   If the camera is not focus on the main target (id 1375524), then set the cameras focus to the  main target.
+;;   todo this breaks pelican cutscene we can easily fix later.
+  (when (and
+          (extra-target-alive?)
+          (!= (-> *camera* drawable-target) *target*)
+          (!= (-> *target* state name) 'target-pole-cycle)
+          )
+    (set! (-> *camera* drawable-target) (the-as handle *target*))
+    )
+
+  (cond
+    (racer?
+      ;; reset zoomer camera
+      (send-event *camera* 'change-state cam-string 0)
+      (send-event *camera* 'set-slave-option #x6000)
+      ;; despawn additional targets, if any
+      (dotimes (tgt-idx (-> *target-list* length))
+        (when (and (> tgt-idx 0) (get-target tgt-idx))
+          (deactivate (get-target tgt-idx))
+          (set! (-> *target-list* tgt-idx) (the-as handle #f))
+          )
+        )
+      )
+    (flutflut?
+      ;; despawn additional targets, if any
+      (dotimes (tgt-idx (-> *target-list* length))
+        (when (and (> tgt-idx 0) (get-target tgt-idx))
+          (deactivate (get-target tgt-idx))
+          (set! (-> *target-list* tgt-idx) (the-as handle #f))
+          )
+        )
+      )
+    ;;If the camera is not set to cam-stick, and we have more than one jak, then set it to cam-stick
+    ((and
+        (extra-target-alive?)
+        (regular-camera-bool)
+        (= (-> (-> (-> (the-as (pointer camera-slave) (-> *camera* child))) state) name) 'cam-string))
+      (send-event *camera* 'change-state cam-stick 0)
+      )
+    )
+
+  ;;Warp side jaks to main Jak if holding all shoulder buttons, or just too far
+  (dotimes (tgt-idx (-> *target-list* length))
+    (let ((tgt (get-target tgt-idx)))
+      (when (and (> tgt-idx 0) (get-target tgt-idx))
+        (cond
+          ((and (cpad-hold? tgt-idx l1) (cpad-hold? tgt-idx l2) (cpad-hold? tgt-idx r1) (cpad-hold? tgt-idx r2))
+            (warp-jakA-to-jakB tgt *target*)
+            )
+          ((and (target-alive? tgt) (check-multi-jak-dist tgt))
+            (warp-jakA-to-jakB tgt *target*)
+            )
+          )
+        )
+      )
+    )
+
+  (none)
+  )
+
+(defun localmulti-start ((tgt-idx int))
+  (let ((tgt (get-target tgt-idx)))
+    (when (> tgt-idx 0)
+      (if (target-alive? tgt)
+        (begin
+          ;; despawn target
+          (deactivate tgt)
+          (set! (-> *target-list* tgt-idx) (the-as handle #f))
+          )
+        (begin
+          ;; spawn new target
+          (set! tgt (-> (start-extra-target tgt-idx) 0))
+          (warp-jakA-to-jakB tgt *target*)
+          (set! (-> *target-list* tgt-idx) (process->handle tgt))
+          (case tgt-idx
+            ((1) (draw-green tgt))
+            ((2) (draw-red tgt))
+            ((3) (draw-blue tgt))
+            )
+          (set! (-> tgt control unknown-cpad-info00) (-> *cpad-list* cpads tgt-idx))
+          )
+        )
+      )
+    )
+  (none)
+  )
+
+;; Spawn targets up to and including target x
+(defun localmulti-start-all ((x int))
+  (dotimes (tgt-idx x)
+    (localmulti-start tgt-idx)
+    )
+  )
+
+;;This code is ran in main.gc in the same function that cheat-mode check is. When a player enters half debug code on a controller that isnt player 1 it will spawn them a jak to play as.
+(defun spawn-extra-targets-code()
+  ;;Multiplayer stuff to clean and move
+    ;;  (pc-set-controller! 0 1)
+    ;; (pc-set-controller! 1 0)
+
+
+
+  (dotimes (tgt-idx (-> *target-list* length))
+    (cond 
+      ((and (> tgt-idx 0)
+               (cpad-hold? tgt-idx l3)
+               (or *cheat-mode* (= *kernel-boot-message* 'play)) ;; not in demo
+               )
+        (check-cheat-code (-> *cheat-temp* tgt-idx) tgt-idx
+          (up up down down left right left right)
+          (cpad-clear! tgt-idx r1)
+          ;; toggle!
+        
+          (cheats-sound-play *cheat-mode*)
+          (localmulti-start tgt-idx)
+          )
+        )
+      ((and (not (get-target tgt-idx)) (cpad-hold? tgt-idx l1) (cpad-hold? tgt-idx l2) (cpad-hold? tgt-idx r1) (cpad-hold? tgt-idx r2))
+        (cheats-sound-play *cheat-mode*)
+        (localmulti-start tgt-idx)
+        )
+      )
+    )
+  ;; back to normal main.gc code.)
+  (none)
+  )

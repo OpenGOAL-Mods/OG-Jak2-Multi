@@ -19,15 +19,19 @@
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;; Begin function defintions.
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;  
 
+  (defun-extern localmulti-run-eachframe none)
     (defun runs-every-frame ()
       ;;(increase-power-cell-by-one) This is a call to increase-power-cell-by-one defined in mod-common-functions.gc
       
-      (if *show-input-display* 
-        (input-display-on)
-        (input-display-off)
-        )
+     
+      (localmulti-run-eachframe)
+      
+      ;; (if *show-input-display* 
+      ;;   (input-display-on)
+      ;;   (input-display-off)
+      ;;   )
 
       (none)
       )
